@@ -1,0 +1,10 @@
+{
+  "description": "This enterprise-grade dashboard provides petroleum engineers and operators with a real-time digital twin of heavy-oil wells, optimizing production and maintenance through AI insights.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

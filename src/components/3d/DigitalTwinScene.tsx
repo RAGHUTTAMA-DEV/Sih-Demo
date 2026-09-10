@@ -80,6 +80,55 @@ const CameraPresetController: React.FC<{
   return null;
 };
 
+// Local 60fps Kinematics for Pumpjack & Wellbore inside Three.js Canvas
+const KinematicSRP: React.FC<{
+  wellState: WellState;
+  onSelectComponent: (name: string) => void;
+  wellheadX: number;
+}> = ({ wellState, onSelectComponent, wellheadX }) => {
+  const [motion, setMotion] = React.useState({
+    crankAngle: wellState.crankAngle || 0,
+    polishedRodPos: wellState.polishedRodPos || 0.5,
+  });
+
+  useFrame((_, delta) => {
+    if (!wellState.isPaused) {
+      const omega = (2 * Math.PI * (wellState.spm || 5.2)) / 60;
+      setMotion((prev) => {
+        const nextAngle = (prev.crankAngle + omega * delta) % (2 * Math.PI);
+        const rodPos = (1 - Math.cos(nextAngle)) * 0.5;
+        return {
+          crankAngle: nextAngle,
+          polishedRodPos: rodPos,
+        };
+      });
+    }
+  });
+
+  return (
+    <>
+      <SurfacePumpjack 
+        crankAngle={motion.crankAngle}
+        strokeLength={wellState.strokeLength}
+        polishedRodPos={motion.polishedRodPos}
+        onClickComponent={onSelectComponent}
+      />
+      <SurfaceStorageTank 
+        wellheadX={wellheadX}
+        productionRate={wellState.productionRate}
+        fluidViscosityIndex={wellState.fluidViscosityIndex}
+        onClickComponent={onSelectComponent}
+      />
+      <WellboreCrossSection 
+        polishedRodPos={motion.polishedRodPos}
+        strokeLength={wellState.strokeLength}
+        fluidViscosityIndex={wellState.fluidViscosityIndex}
+        onClickComponent={onSelectComponent}
+      />
+    </>
+  );
+};
+
 export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
   wellState,
   activeCameraPreset,
@@ -211,28 +260,11 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
           />
         </group>
 
-        {/* 3D SURFACE PUMPJACK MODEL */}
-        <SurfacePumpjack 
-          crankAngle={wellState.crankAngle}
-          strokeLength={wellState.strokeLength}
-          polishedRodPos={wellState.polishedRodPos}
-          onClickComponent={onSelectComponent}
-        />
-
-        {/* 3D SURFACE FLOWLINE PIPELINE & CRUDE OIL STORAGE TANK BATTERY */}
-        <SurfaceStorageTank 
+        {/* 3D SURFACE PUMPJACK & WELLBORE RUNNING LOCAL 60FPS KINEMATICS */}
+        <KinematicSRP 
+          wellState={wellState}
+          onSelectComponent={onSelectComponent}
           wellheadX={wellheadX}
-          productionRate={wellState.productionRate}
-          fluidViscosityIndex={wellState.fluidViscosityIndex}
-          onClickComponent={onSelectComponent}
-        />
-
-        {/* 3D WELLBORE CROSS-SECTION */}
-        <WellboreCrossSection 
-          polishedRodPos={wellState.polishedRodPos}
-          strokeLength={wellState.strokeLength}
-          fluidViscosityIndex={wellState.fluidViscosityIndex}
-          onClickComponent={onSelectComponent}
         />
 
         {/* 3D RESERVOIR STEAM HEATED ZONE */}

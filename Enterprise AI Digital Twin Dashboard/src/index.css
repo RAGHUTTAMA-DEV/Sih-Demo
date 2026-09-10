@@ -1,60 +1,69 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-@layer base {
-  * {
-    box-sizing: border-box;
-  }
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
-  html, body, #root {
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-  }
+  --color-navy-950: #050d1a;
+  --color-navy-900: #0a1628;
+  --color-navy-800: #0f2040;
+  --color-navy-700: #152a56;
+  --color-navy-600: #1e3a6e;
+  --color-navy-500: #2b50a0;
+  --color-navy-400: #3b6cc8;
+  --color-navy-300: #5a8cdd;
+  --color-navy-200: #90b8ef;
+  --color-navy-100: #cce0fa;
+  --color-navy-50: #eef4fd;
 
-  body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background-color: #f8fafc;
-    color: #0f172a;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+  --color-cyan-500: #06b6d4;
+  --color-cyan-400: #22d3ee;
+  --color-cyan-300: #67e8f9;
+  --color-cyan-200: #a5f3fc;
+  --color-cyan-100: #cffafe;
+
+  --color-steam-600: #ea580c;
+  --color-steam-500: #f97316;
+  --color-steam-400: #fb923c;
+  --color-steam-300: #fdba74;
+  --color-steam-200: #fed7aa;
+  --color-steam-100: #ffedd5;
+  --color-steam-50: #fff7ed;
+
+  --color-slate-950: #020617;
 }
 
-/* Custom scrollbars for dashboard panels */
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+/* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
 }
-
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 4px;
+  border-radius: 2px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
-}
-
-/* Glassmorphism & Enterprise SCADA Cards */
-.scada-card-light {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
-}
-
-.scada-card-hover {
-  transition: all 0.2s ease-in-out;
-}
-.scada-card-hover:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
 }
 
 /* Animated flow lines */
@@ -129,10 +138,6 @@
 .ticker-content {
   display: inline-block;
   animation: ticker 40s linear infinite;
-}
-
-.ticker-content:hover {
-  animation-play-state: paused;
 }
 
 /* Card hover effects */
