@@ -55,19 +55,19 @@ export const SurfacePumpjack: React.FC<SurfacePumpjackProps> = ({
         {/* Main 4 Steel Tubular Legs */}
         <mesh position={[-0.65, 0, 0.65]} rotation={[0, 0, -0.15]} castShadow>
           <cylinderGeometry args={[0.095, 0.14, samsonHeight, 16]} />
-          <meshStandardMaterial color="#64748b" metalness={0.88} roughness={0.2} />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.92} roughness={0.1} />
         </mesh>
         <mesh position={[0.65, 0, 0.65]} rotation={[0, 0, 0.15]} castShadow>
           <cylinderGeometry args={[0.095, 0.14, samsonHeight, 16]} />
-          <meshStandardMaterial color="#64748b" metalness={0.88} roughness={0.2} />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.92} roughness={0.1} />
         </mesh>
         <mesh position={[-0.65, 0, -0.65]} rotation={[0, 0, -0.15]} castShadow>
           <cylinderGeometry args={[0.095, 0.14, samsonHeight, 16]} />
-          <meshStandardMaterial color="#64748b" metalness={0.88} roughness={0.2} />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.92} roughness={0.1} />
         </mesh>
         <mesh position={[0.65, 0, -0.65]} rotation={[0, 0, 0.15]} castShadow>
           <cylinderGeometry args={[0.095, 0.14, samsonHeight, 16]} />
-          <meshStandardMaterial color="#64748b" metalness={0.88} roughness={0.2} />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.92} roughness={0.1} />
         </mesh>
 
         {/* Horizontal & Diagonal Lattice Braces */}
@@ -75,11 +75,11 @@ export const SurfacePumpjack: React.FC<SurfacePumpjackProps> = ({
           <group key={idx} position={[0, yOff, 0]}>
             <mesh position={[0, 0, 0.6]} castShadow>
               <boxGeometry args={[1.35 - yOff * 0.2, 0.08, 0.08]} />
-              <meshStandardMaterial color="#334155" metalness={0.8} roughness={0.25} />
+              <meshStandardMaterial color="#64748b" metalness={0.85} roughness={0.15} />
             </mesh>
             <mesh position={[0, 0, -0.6]} castShadow>
               <boxGeometry args={[1.35 - yOff * 0.2, 0.08, 0.08]} />
-              <meshStandardMaterial color="#334155" metalness={0.8} roughness={0.25} />
+              <meshStandardMaterial color="#64748b" metalness={0.85} roughness={0.15} />
             </mesh>
           </group>
         ))}
@@ -87,11 +87,11 @@ export const SurfacePumpjack: React.FC<SurfacePumpjackProps> = ({
         {/* Samson Post Top Saddle Bearing Housing */}
         <mesh position={[0, samsonHeight * 0.5 + 0.12, 0]} castShadow>
           <boxGeometry args={[0.9, 0.32, 1.45]} />
-          <meshStandardMaterial color="#f59e0b" metalness={0.85} roughness={0.2} />
+          <meshStandardMaterial color="#fbbf24" metalness={0.88} roughness={0.1} emissive="#f59e0b" emissiveIntensity={0.2} />
         </mesh>
         <mesh position={[0, samsonHeight * 0.5 + 0.26, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
           <cylinderGeometry args={[0.17, 0.17, 1.35, 24]} />
-          <meshStandardMaterial color="#0f172a" metalness={0.95} roughness={0.1} />
+          <meshStandardMaterial color="#1e293b" metalness={0.95} roughness={0.05} />
         </mesh>
       </group>
 
@@ -104,31 +104,31 @@ export const SurfacePumpjack: React.FC<SurfacePumpjackProps> = ({
         {/* Main Steel I-Beam Body */}
         <mesh position={[0, 0.25, 0]} castShadow>
           <boxGeometry args={[beamLength, 0.52, 0.4]} />
-          <meshStandardMaterial color="#f59e0b" metalness={0.75} roughness={0.2} />
+          <meshStandardMaterial color="#fbbf24" metalness={0.8} roughness={0.15} emissive="#f59e0b" emissiveIntensity={0.15} />
         </mesh>
         {/* Beam Flange Reinforcement Plates */}
         <mesh position={[0, 0.53, 0]} castShadow>
           <boxGeometry args={[beamLength * 1.02, 0.07, 0.46]} />
-          <meshStandardMaterial color="#d97706" metalness={0.85} roughness={0.15} />
+          <meshStandardMaterial color="#d97706" metalness={0.88} roughness={0.1} />
         </mesh>
 
         {/* HORSEHEAD ASSEMBLY (CURVED FRONT HEAD) */}
         <group position={[-beamLength * 0.5, 0.25, 0]}>
           <mesh position={[-0.35, -0.3, 0]} rotation={[0, 0, -0.3]} castShadow>
             <boxGeometry args={[0.68, 1.35, 0.44]} />
-            <meshStandardMaterial color="#d97706" metalness={0.8} roughness={0.2} />
+            <meshStandardMaterial color="#f59e0b" metalness={0.85} roughness={0.15} />
           </mesh>
           {/* Curved Front Guide Face */}
           <mesh position={[-0.72, -0.55, 0]} castShadow>
             <cylinderGeometry args={[0.88, 0.88, 0.44, 24, 1, false, 0, Math.PI * 0.6]} />
-            <meshStandardMaterial color="#b45309" metalness={0.85} roughness={0.15} />
+            <meshStandardMaterial color="#d97706" metalness={0.9} roughness={0.1} />
           </mesh>
         </group>
 
         {/* EQUALIZER BEARING (REAR CONNECTING END) */}
         <mesh position={[beamLength * 0.5, 0.1, 0]} rotation={[Math.PI * 0.5, 0, 0]} castShadow>
           <cylinderGeometry args={[0.17, 0.17, 0.95, 20]} />
-          <meshStandardMaterial color="#0f172a" metalness={0.95} roughness={0.1} />
+          <meshStandardMaterial color="#1e293b" metalness={0.95} roughness={0.05} />
         </mesh>
       </group>
 
@@ -140,17 +140,17 @@ export const SurfacePumpjack: React.FC<SurfacePumpjackProps> = ({
         {/* Main Gearbox Housing */}
         <mesh position={[0, 0, 0]} castShadow>
           <boxGeometry args={[1.55, 0.9, 1.35]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.85} roughness={0.25} />
+          <meshStandardMaterial color="#334155" metalness={0.88} roughness={0.15} />
         </mesh>
         {/* Gearbox Oil Level Sight Glass */}
-        <mesh position={[0, 0.1, 0.69]}>
-          <cylinderGeometry args={[0.08, 0.08, 0.04, 16]} rotation={[Math.PI / 2, 0, 0]} />
-          <meshStandardMaterial color="#f59e0b" emissive="#f59e0b" emissiveIntensity={0.6} />
+        <mesh position={[0, 0.1, 0.69]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.08, 0.08, 0.04, 16]} />
+          <meshStandardMaterial color="#f59e0b" emissive="#f59e0b" emissiveIntensity={0.8} />
         </mesh>
         {/* Electric Motor Cylinder with Cooling Fins */}
         <mesh position={[-0.9, -0.1, 0]} rotation={[0, 0, Math.PI * 0.5]} castShadow>
           <cylinderGeometry args={[0.34, 0.34, 0.8, 24]} />
-          <meshStandardMaterial color="#0284c7" metalness={0.75} roughness={0.2} />
+          <meshStandardMaterial color="#0284c7" metalness={0.8} roughness={0.15} emissive="#0284c7" emissiveIntensity={0.2} />
         </mesh>
       </group>
 
@@ -163,12 +163,12 @@ export const SurfacePumpjack: React.FC<SurfacePumpjackProps> = ({
         <group position={[0, 0, 0.82]} rotation={[0, 0, crankAngle]}>
           <mesh position={[crankRadius * 0.5, 0, 0]} castShadow>
             <boxGeometry args={[crankRadius * 1.25, 0.3, 0.17]} />
-            <meshStandardMaterial color="#475569" metalness={0.88} roughness={0.15} />
+            <meshStandardMaterial color="#64748b" metalness={0.9} roughness={0.1} />
           </mesh>
           {/* Heavy Red Counterweight Block */}
           <mesh position={[crankRadius * 0.85, 0, 0]} castShadow>
             <boxGeometry args={[0.78, 1.3, 0.34]} />
-            <meshStandardMaterial color="#dc2626" metalness={0.55} roughness={0.3} />
+            <meshStandardMaterial color="#ef4444" metalness={0.6} roughness={0.2} emissive="#dc2626" emissiveIntensity={0.15} />
           </mesh>
           {/* Metallic Crank Pin */}
           <mesh position={[crankRadius, 0, -0.1]} rotation={[Math.PI * 0.5, 0, 0]} castShadow>
@@ -181,11 +181,11 @@ export const SurfacePumpjack: React.FC<SurfacePumpjackProps> = ({
         <group position={[0, 0, -0.82]} rotation={[0, 0, crankAngle]}>
           <mesh position={[crankRadius * 0.5, 0, 0]} castShadow>
             <boxGeometry args={[crankRadius * 1.25, 0.3, 0.17]} />
-            <meshStandardMaterial color="#475569" metalness={0.88} roughness={0.15} />
+            <meshStandardMaterial color="#64748b" metalness={0.9} roughness={0.1} />
           </mesh>
           <mesh position={[crankRadius * 0.85, 0, 0]} castShadow>
             <boxGeometry args={[0.78, 1.3, 0.34]} />
-            <meshStandardMaterial color="#dc2626" metalness={0.55} roughness={0.3} />
+            <meshStandardMaterial color="#ef4444" metalness={0.6} roughness={0.2} emissive="#dc2626" emissiveIntensity={0.15} />
           </mesh>
         </group>
       </group>
@@ -197,7 +197,7 @@ export const SurfacePumpjack: React.FC<SurfacePumpjackProps> = ({
         castShadow
       >
         <cylinderGeometry args={[0.058, 0.058, pitmanLength, 16]} />
-        <meshStandardMaterial color="#cbd5e1" metalness={0.92} roughness={0.1} />
+        <meshStandardMaterial color="#f8fafc" metalness={0.95} roughness={0.05} />
       </mesh>
       <mesh 
         position={[(2.0 + crankPinX) * 0.5, (1.25 + crankPinY) * 0.5, -0.82]}
@@ -205,7 +205,7 @@ export const SurfacePumpjack: React.FC<SurfacePumpjackProps> = ({
         castShadow
       >
         <cylinderGeometry args={[0.058, 0.058, pitmanLength, 16]} />
-        <meshStandardMaterial color="#cbd5e1" metalness={0.92} roughness={0.1} />
+        <meshStandardMaterial color="#f8fafc" metalness={0.95} roughness={0.05} />
       </mesh>
 
       {/* BRIDLE WIRE CABLES */}
@@ -239,10 +239,10 @@ export const SurfacePumpjack: React.FC<SurfacePumpjackProps> = ({
           <meshStandardMaterial color="#ef4444" metalness={0.85} roughness={0.15} />
         </mesh>
         {/* Surface Pressure Gauge Dial */}
-        <group position={[-0.25, 0.25, 0.25]} rotation={[0, -Math.PI / 4, 0]}>
-          <cylinderGeometry args={[0.08, 0.08, 0.04, 16]} rotation={[Math.PI / 2, 0, 0]} />
+        <mesh position={[-0.25, 0.25, 0.25]} rotation={[Math.PI / 2, -Math.PI / 4, 0]}>
+          <cylinderGeometry args={[0.08, 0.08, 0.04, 16]} />
           <meshStandardMaterial color="#06b6d4" emissive="#06b6d4" emissiveIntensity={0.8} />
-        </group>
+        </mesh>
       </group>
 
       {/* RECIPROCATING POLISHED ROD */}

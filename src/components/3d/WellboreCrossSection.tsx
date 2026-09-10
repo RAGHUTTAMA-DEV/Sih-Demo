@@ -85,10 +85,12 @@ export const WellboreCrossSection: React.FC<WellboreCrossSectionProps> = ({
         <meshPhysicalMaterial 
           color="#38bdf8" 
           transparent={true} 
-          opacity={0.35} 
+          opacity={0.55} 
           roughness={0.05} 
-          metalness={0.7}
-          transmission={0.65}
+          metalness={0.8}
+          transmission={0.5}
+          emissive="#0284c7"
+          emissiveIntensity={0.3}
           clearcoat={1.0}
           side={THREE.DoubleSide}
         />
@@ -106,11 +108,11 @@ export const WellboreCrossSection: React.FC<WellboreCrossSectionProps> = ({
           {/* Collar Ring */}
           <mesh>
             <cylinderGeometry args={[0.61, 0.61, 0.28, 24]} />
-            <meshStandardMaterial color="#334155" metalness={0.9} roughness={0.1} />
+            <meshStandardMaterial color="#64748b" metalness={0.9} roughness={0.1} emissive="#38bdf8" emissiveIntensity={0.2} />
           </mesh>
           {/* Depth Label Badge via Html */}
           <Html position={[-0.85, 0, 0]} distanceFactor={14} center>
-            <span className="px-1.5 py-0.5 rounded bg-slate-900/90 border border-cyan-500/40 text-cyan-400 font-mono text-[9px] font-bold shadow-md">
+            <span className="px-2 py-0.5 rounded bg-slate-950/95 border border-cyan-400 text-cyan-300 font-mono text-[10px] font-extrabold shadow-lg backdrop-blur-md">
               {item.label}
             </span>
           </Html>
@@ -124,11 +126,11 @@ export const WellboreCrossSection: React.FC<WellboreCrossSectionProps> = ({
       >
         <cylinderGeometry args={[0.34, 0.34, wellboreDepth, 24, 1, true]} />
         <meshPhysicalMaterial 
-          color="#94a3b8" 
+          color="#e2e8f0" 
           transparent={true} 
-          opacity={0.4} 
-          roughness={0.1} 
-          metalness={0.8}
+          opacity={0.5} 
+          roughness={0.05} 
+          metalness={0.9}
           side={THREE.DoubleSide}
         />
       </mesh>
@@ -139,11 +141,11 @@ export const WellboreCrossSection: React.FC<WellboreCrossSectionProps> = ({
         <meshStandardMaterial 
           color={fluidColor} 
           transparent={true} 
-          opacity={0.45 + fluidViscosityIndex * 0.5}
-          roughness={0.2}
+          opacity={0.65}
+          roughness={0.1}
           metalness={0.1}
           emissive={fluidColor}
-          emissiveIntensity={0.35 * (1 - fluidViscosityIndex)}
+          emissiveIntensity={0.6 * (1 - fluidViscosityIndex * 0.4)}
         />
       </mesh>
 
@@ -158,10 +160,10 @@ export const WellboreCrossSection: React.FC<WellboreCrossSectionProps> = ({
           />
         </bufferGeometry>
         <pointsMaterial 
-          size={0.16} 
+          size={0.24} 
           color={fluidColor} 
           transparent={true} 
-          opacity={0.9}
+          opacity={0.95}
           blending={THREE.AdditiveBlending} 
         />
       </points>

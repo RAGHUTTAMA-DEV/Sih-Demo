@@ -88,7 +88,7 @@ export const ReservoirZone: React.FC<ReservoirZoneProps> = ({
         onClick={(e) => { e.stopPropagation(); onClickComponent?.('Jodhpur Sandstone Formation (17-19° API Crude)'); }}
       >
         <cylinderGeometry args={[14, 14, 3.5, 32]} />
-        <meshStandardMaterial color="#1e1814" roughness={0.9} metalness={0.1} />
+        <meshStandardMaterial color="#4a3728" roughness={0.7} metalness={0.2} emissive="#f59e0b" emissiveIntensity={0.12} />
       </mesh>
 
       {/* VOLUMETRIC THERMAL HEATED ZONE SPHERE (CSS STEAM SOAK) */}
@@ -100,10 +100,10 @@ export const ReservoirZone: React.FC<ReservoirZoneProps> = ({
         <meshStandardMaterial 
           color={glowColor}
           transparent={true}
-          opacity={0.45}
-          roughness={0.2}
+          opacity={0.55}
+          roughness={0.15}
           emissive={glowColor}
-          emissiveIntensity={0.65}
+          emissiveIntensity={0.85}
           wireframe={phase === 'SOAK'}
         />
       </mesh>
@@ -172,9 +172,9 @@ export const ReservoirZone: React.FC<ReservoirZoneProps> = ({
             <mesh 
               key={j} 
               position={[Math.cos(angle) * 0.45, 0, Math.sin(angle) * 0.45]}
-              rotation={[0, -angle, 0]}
+              rotation={[0, -angle, Math.PI * 0.5]}
             >
-              <cylinderGeometry args={[0.04, 0.04, 0.5, 8]} rotation={[0, 0, Math.PI * 0.5]} />
+              <cylinderGeometry args={[0.04, 0.04, 0.5, 8]} />
               <meshStandardMaterial color="#f97316" emissive="#f97316" emissiveIntensity={0.8} />
             </mesh>
           ))}

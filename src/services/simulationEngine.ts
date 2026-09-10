@@ -6,33 +6,49 @@ export const PHASE_DURATIONS: Record<CyclePhase, number> = {
   PRODUCTION: 90 // 90 seconds
 };
 
-// Initial state creator
+// Initial state creator matching Screenshot parameters (BGW-07)
 export function getInitialState(): WellState {
   return {
+    activeTab: 'digital_twin',
+    viewMode: 'digital_twin',
+    timelineDay: 0,
+
     phase: 'PRODUCTION',
-    phaseTime: 15,
+    phaseTime: 25,
     phaseDuration: PHASE_DURATIONS.PRODUCTION,
     isPaused: false,
     speedMultiplier: 1,
 
-    spm: 8.0,
-    strokeLength: 2.8,
-    targetSpm: 8.0,
-    targetStrokeLength: 2.8,
+    spm: 5.2,
+    strokeLength: 2.5,
+    targetSpm: 4.7,
+    targetStrokeLength: 2.5,
+    vfdFrequencyHz: 42,
 
-    reservoirTemp: 185,
+    reservoirTemp: 62.4,
     heatedZoneRadius: 26.5,
-    fluidViscosityIndex: 0.25,
-    viscositycP: 110,
-    minRodLoad: 5.2,
+    fluidViscosityIndex: 0.72,
+    viscositycP: 18700,
+    minRodLoad: 4.2,
     maxRodLoad: 18.4,
-    productionRate: 210,
-    sor: 2.9,
+    productionRate: 48.6,
+    sor: 4.8,
+    energyKwhPerBbl: 21.4,
+    pumpFillagePercent: 78,
+    rodFailureRiskPercent: 7,
+    twinHealthPercent: 96,
+
+    whpBar: 8.4,
+    bhpBar: 14.2,
+    injPressureBar: 8.4,
+    fluidLevelM: 142,
+    rodLoadKn: 18.4,
+    motorAmps: 38.2,
 
     liveDynoCard: [],
     normalDynoCard: [],
-    anomalyDetected: false,
-    anomalyMessage: null,
+    anomalyDetected: true,
+    anomalyMessage: "Reservoir cooling detected. Viscosity increased to 18,700 cP. SPM 5.2 exceeding fall rate.",
     aiRecommendationApplied: false,
 
     crankAngle: 0,
@@ -45,7 +61,6 @@ export function getInitialState(): WellState {
 export function generateNormalDynoCard(strokeMeters: number): DynamometerPoint[] {
   const points: DynamometerPoint[] = [];
   const N = 60;
-  const strokeFeet = strokeMeters * 3.28084;
   const baseStaticLoad = 7.5; // klb fluid + rod weight
   const fluidWeight = 8.5;    // klb
 
@@ -87,7 +102,7 @@ export function generateLiveDynoCard(
   const fluidWeight = 8.5;
 
   // Severity multiplier based on viscosity & SPM
-  const distortionFactor = isAnomaly ? Math.min(1.8, (viscosityIndex - 0.5) * (spm / 5.0) * 2.5) : 0;
+  const distortionFactor = isAnomaly ? Math.min(1.8, (viscosityIndex - 0.4) * (spm / 4.5) * 2.2) : 0;
 
   for (let i = 0; i <= N; i++) {
     const t = (i / N) * Math.PI * 2;
@@ -100,7 +115,7 @@ export function generateLiveDynoCard(
       if (isAnomaly) {
         // Impact loading spike on upstroke pick-up after rod float!
         if (t < Math.PI * 0.4) {
-          dynamicStretch += distortionFactor * 7.5; // Severe impact spike up to ~27 klb
+          dynamicStretch += distortionFactor * 6.5; // Impact spike
         }
       }
       load += fluidWeight + dynamicStretch;
@@ -108,8 +123,8 @@ export function generateLiveDynoCard(
       // Downstroke
       let valveRelease = Math.abs(Math.sin(t)) * 6.8;
       if (isAnomaly) {
-        // Rod floating: drag forces hold rod string up, causing line tension drop to ~1.5 klb
-        valveRelease += distortionFactor * 6.0;
+        // Rod floating: drag forces hold rod string up
+        valveRelease += distortionFactor * 5.5;
         load = Math.max(1.2, load + fluidWeight - valveRelease);
       } else {
         load += Math.max(0.5, fluidWeight - valveRelease);
@@ -117,7 +132,7 @@ export function generateLiveDynoCard(
     }
 
     // Add subtle real-time noise
-    const noise = (Math.random() - 0.5) * 0.15;
+    const noise = (Math.random() - 0.5) * 0.12;
     points.push({
       position: parseFloat(position.toFixed(3)),
       load: parseFloat(Math.max(1.0, load + noise).toFixed(2))
@@ -163,7 +178,6 @@ export function stepSimulation(
       });
     } else {
       currentPhase = 'INJECTION';
-      // Reset AI recommendation application for next cycle demo
       newEvents.push({
         id: `evt-${Date.now()}`,
         timestamp: new Date().toLocaleTimeString(),
@@ -212,28 +226,26 @@ export function stepSimulation(
     sor = 3.4;
   } else {
     // PRODUCTION
-    // Temperature decays exponentially during production
-    const decay = Math.exp(-phaseProgress * 2.2);
-    temp = 48 + (230 - 48) * decay;
+    const decay = Math.exp(-phaseProgress * 1.5);
+    temp = 55 + (220 - 55) * decay;
     radius = 8 + (32 - 8) * decay;
 
-    // Fluid viscosity index rises as near-wellbore oil cools (17-19° API heavy crude)
-    viscosityIdx = Math.min(0.95, 0.08 + (1 - decay) * 0.88);
+    // Fluid viscosity rises as near-wellbore crude cools
+    viscosityIdx = Math.min(0.92, 0.25 + (1 - decay) * 0.70);
 
-    // If AI recommendation applied, lower SPM reduces viscous heating/frictional resistance
     if (currentState.aiRecommendationApplied) {
-      viscosityIdx = Math.min(0.62, viscosityIdx * 0.85);
+      viscosityIdx = Math.min(0.55, viscosityIdx * 0.78);
     }
 
-    productionRate = Math.max(25, 260 * decay + (spm / 8.0) * 40);
-    sor = 2.1 + (1 - decay) * 1.8;
+    productionRate = Math.max(15, 60 * decay + (spm / 5.2) * 35);
+    sor = 3.5 + (1 - decay) * 1.3;
   }
 
-  const viscositycP = Math.round(35 + Math.pow(viscosityIdx, 2.5) * 445); // 35 cP up to 480 cP
+  const viscositycP = Math.round(1500 + Math.pow(viscosityIdx, 2.2) * 22000); // Up to ~23,500 cP
 
-  // Anomaly evaluation: Rod floating occurs when crude viscosity is high (>0.68) AND SPM is high (>6.5)
-  const isViscous = viscosityIdx > 0.68;
-  const isHighSpeed = spm > 6.5;
+  // Anomaly evaluation: Rod floating occurs when crude viscosity is high (>0.62) AND SPM is high (>4.9)
+  const isViscous = viscosityIdx > 0.62;
+  const isHighSpeed = spm > 4.9;
   const shouldTriggerAnomaly = currentPhase === 'PRODUCTION' && isViscous && isHighSpeed && !currentState.aiRecommendationApplied;
 
   let anomalyDetected = currentState.anomalyDetected;
@@ -241,16 +253,15 @@ export function stepSimulation(
 
   if (shouldTriggerAnomaly && !anomalyDetected) {
     anomalyDetected = true;
-    anomalyMessage = `CRITICAL: Viscosity reached ${viscositycP} cP. High SPM (${spm.toFixed(1)}) causing severe Rod Floating & Impact Loading!`;
+    anomalyMessage = `Reservoir cooling detected. Viscosity increased to ${viscositycP.toLocaleString()} cP over 72h trend. Oil mobility reduction expected.`;
     newEvents.push({
       id: `evt-${Date.now()}`,
       timestamp: new Date().toLocaleTimeString(),
       phase: 'PRODUCTION',
       severity: 'critical',
-      message: `ANOMALY: High fluid drag (${viscositycP} cP) causing rod string floating on downstroke. Peak rod load spike detected!`
+      message: `ANOMALY: High fluid drag (${viscositycP.toLocaleString()} cP) causing rod string floating on downstroke!`
     });
   } else if (!shouldTriggerAnomaly && anomalyDetected) {
-    // Cleared!
     anomalyDetected = false;
     anomalyMessage = null;
     newEvents.push({
@@ -258,14 +269,13 @@ export function stepSimulation(
       timestamp: new Date().toLocaleTimeString(),
       phase: 'PRODUCTION',
       severity: 'info',
-      message: 'OPTIMIZATION CLEARED: Sucker rod kinematics restored to normal. Impact loading eliminated.'
+      message: 'OPTIMIZATION CLEARED: SRP speed reduced to 4.7 SPM. Kinematics normalized.'
     });
   }
 
   // Update Pumpjack Kinematic Angle for 3D animation
   const spmRadsPerSec = (spm * 2 * Math.PI) / 60;
   const newCrankAngle = (currentState.crankAngle + spmRadsPerSec * scaledDelta) % (2 * Math.PI);
-  // Polished rod position: 0 (top stroke) to 1 (bottom stroke)
   const polishedRodPos = 0.5 * (1 - Math.cos(newCrankAngle));
 
   // Dynamometer cards calculation
@@ -277,21 +287,35 @@ export function stepSimulation(
   const minRodLoad = Math.min(...loads);
   const maxRodLoad = Math.max(...loads);
 
+  // Calculate live SCADA telemetry numbers
+  const vfdFrequencyHz = Math.round(spm * 8.07); // ~42 Hz at 5.2 SPM
+  const energyKwhPerBbl = parseFloat((24.1 - (currentState.aiRecommendationApplied ? 2.7 : 0)).toFixed(1));
+  const pumpFillagePercent = currentState.aiRecommendationApplied ? 86 : 78;
+  const rodFailureRiskPercent = currentState.aiRecommendationApplied ? 3 : 7;
+  const motorAmps = parseFloat((32.0 + (spm / 5.2) * 6.2).toFixed(1));
+  const rodLoadKn = parseFloat((maxRodLoad * 4.448).toFixed(1)); // klb to kN
+
   const nextState: WellState = {
     ...currentState,
     phase: currentPhase,
     phaseTime: newPhaseTime,
     phaseDuration: PHASE_DURATIONS[currentPhase],
-    spm: parseFloat(spm.toFixed(2)),
-    strokeLength: parseFloat(strokeLength.toFixed(2)),
-    reservoirTemp: Math.round(temp),
+    spm: parseFloat(spm.toFixed(1)),
+    strokeLength: parseFloat(strokeLength.toFixed(1)),
+    vfdFrequencyHz,
+    reservoirTemp: parseFloat(temp.toFixed(1)),
     heatedZoneRadius: parseFloat(radius.toFixed(1)),
     fluidViscosityIndex: parseFloat(viscosityIdx.toFixed(3)),
     viscositycP,
     minRodLoad: parseFloat(minRodLoad.toFixed(1)),
     maxRodLoad: parseFloat(maxRodLoad.toFixed(1)),
-    productionRate: Math.round(productionRate),
-    sor: parseFloat(sor.toFixed(2)),
+    productionRate: parseFloat(productionRate.toFixed(1)),
+    sor: parseFloat(sor.toFixed(1)),
+    energyKwhPerBbl,
+    pumpFillagePercent,
+    rodFailureRiskPercent,
+    motorAmps,
+    rodLoadKn,
     normalDynoCard,
     liveDynoCard,
     anomalyDetected,

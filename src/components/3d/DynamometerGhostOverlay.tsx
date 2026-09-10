@@ -13,9 +13,8 @@ export const DynamometerGhostOverlay: React.FC<DynamometerGhostOverlayProps> = (
   normalCard,
   isAnomaly
 }) => {
-  // Generate SVG path strings for Live and Normal card traces
-  const width = 160;
-  const height = 90;
+  const width = 170;
+  const height = 95;
 
   const getPath = (points: DynamometerPoint[]) => {
     if (!points || points.length === 0) return '';
@@ -31,28 +30,29 @@ export const DynamometerGhostOverlay: React.FC<DynamometerGhostOverlayProps> = (
   const normalPath = getPath(normalCard);
 
   return (
-    <group position={[0, 6.2, 0]}>
-      <Html center transform distanceFactor={12} zIndexRange={[100, 0]}>
-        <div className={`p-2.5 rounded-lg border backdrop-blur-md shadow-2xl transition-all duration-300 w-52 select-none ${
+    <group position={[3.8, 3.8, 0]}>
+      {/* Non-mirrored billboarding HTML HUD */}
+      <Html center distanceFactor={11} zIndexRange={[100, 0]}>
+        <div className={`p-2.5 rounded-xl border backdrop-blur-md shadow-2xl transition-all duration-300 w-56 select-none ${
           isAnomaly 
-            ? 'bg-red-950/80 border-red-500/80 text-red-200 ring-2 ring-red-500/50' 
-            : 'bg-slate-900/85 border-amber-500/40 text-slate-100'
+            ? 'bg-red-950/90 border-red-500 text-red-200 ring-2 ring-red-500/50' 
+            : 'bg-slate-900/90 border-slate-700 text-slate-100'
         }`}>
           {/* Header */}
           <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-white/10">
-            <span className="text-[10px] font-mono tracking-wider text-amber-400 font-bold uppercase flex items-center gap-1">
-              <span className={`w-1.5 h-1.5 rounded-full ${isAnomaly ? 'bg-red-500 animate-ping' : 'bg-emerald-400'}`}></span>
+            <span className="text-[10px] font-mono tracking-wider text-amber-400 font-bold uppercase flex items-center gap-1.5">
+              <span className={`w-2 h-2 rounded-full ${isAnomaly ? 'bg-red-500 animate-ping' : 'bg-emerald-400'}`}></span>
               3D Dyno Ghost HUD
             </span>
-            <span className={`text-[9px] font-mono px-1 rounded ${
-              isAnomaly ? 'bg-red-600 text-white font-bold' : 'bg-emerald-950 text-emerald-300 border border-emerald-500/30'
+            <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-bold ${
+              isAnomaly ? 'bg-red-600 text-white' : 'bg-emerald-950 text-emerald-300 border border-emerald-500/30'
             }`}>
-              {isAnomaly ? 'ANOMALY DETECTED' : 'NORMAL CARD'}
+              {isAnomaly ? 'ANOMALY' : 'NORMAL'}
             </span>
           </div>
 
           {/* SVG Dynamometer Curve */}
-          <div className="relative bg-slate-950/80 rounded border border-white/5 p-1">
+          <div className="relative bg-slate-950/90 rounded-lg border border-white/10 p-1.5">
             <svg width={width} height={height} className="overflow-visible">
               {/* Grid Lines */}
               <line x1="10" y1="10" x2={width-10} y2="10" stroke="#334155" strokeWidth="0.5" strokeDasharray="2,2" />
@@ -67,15 +67,15 @@ export const DynamometerGhostOverlay: React.FC<DynamometerGhostOverlayProps> = (
                 d={livePath} 
                 fill={isAnomaly ? 'rgba(239, 68, 68, 0.25)' : 'rgba(245, 158, 11, 0.15)'} 
                 stroke={isAnomaly ? '#ef4444' : '#f59e0b'} 
-                strokeWidth="2" 
+                strokeWidth="2.2" 
               />
             </svg>
 
             {/* Labels */}
-            <div className="flex justify-between items-center text-[8px] font-mono text-slate-400 mt-1">
-              <span>0% (BTM)</span>
-              <span className="text-amber-400 font-medium">Load vs Stroke</span>
-              <span>100% (TOP)</span>
+            <div className="flex justify-between items-center text-[9px] font-mono text-slate-400 mt-1">
+              <span>Bottom Stroke</span>
+              <span className="text-amber-400 font-bold">Position vs Load</span>
+              <span>Top Stroke</span>
             </div>
           </div>
         </div>

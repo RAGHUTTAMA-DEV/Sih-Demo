@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { SurfacePumpjack } from './SurfacePumpjack';
 import { WellboreCrossSection } from './WellboreCrossSection';
 import { ReservoirZone } from './ReservoirZone';
+import { SurfaceStorageTank } from './SurfaceStorageTank';
 import { DynamometerGhostOverlay } from './DynamometerGhostOverlay';
 import { SpatialAnnotations } from './SpatialAnnotations';
 import { WellState, CameraPreset } from '../../types/simulation';
@@ -12,6 +13,7 @@ import { WellState, CameraPreset } from '../../types/simulation';
 interface DigitalTwinSceneProps {
   wellState: WellState;
   activeCameraPreset: CameraPreset;
+  showSpatialTags?: boolean;
   onSelectComponent: (name: string) => void;
 }
 
@@ -36,20 +38,20 @@ const CameraPresetController: React.FC<{
 
     switch (activePreset) {
       case 'overview':
-        endPosRef.current.set(9, 6, 18);
-        endTargetRef.current.set(-2, -3.5, 0);
+        endPosRef.current.set(3.5, 4.0, 11.5);
+        endTargetRef.current.set(-2.5, 1.2, 0);
         break;
       case 'pumpjack':
-        endPosRef.current.set(3, 3.5, 9);
-        endTargetRef.current.set(0, 2.2, 0);
+        endPosRef.current.set(1.8, 2.5, 6.5);
+        endTargetRef.current.set(0, 1.8, 0);
         break;
       case 'wellbore':
-        endPosRef.current.set(-1, -4, 11);
-        endTargetRef.current.set(-5.4, -6.5, 0);
+        endPosRef.current.set(-1.2, -4.5, 9.0);
+        endTargetRef.current.set(-5.4, -6.0, 0);
         break;
       case 'reservoir':
-        endPosRef.current.set(-1, -11, 11);
-        endTargetRef.current.set(-5.4, -14.5, 0);
+        endPosRef.current.set(-1.2, -12.5, 10.0);
+        endTargetRef.current.set(-5.4, -14.0, 0);
         break;
     }
 
@@ -81,25 +83,29 @@ const CameraPresetController: React.FC<{
 export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
   wellState,
   activeCameraPreset,
+  showSpatialTags = false,
   onSelectComponent
 }) => {
   const controlsRef = useRef<any>(null);
+  const wellheadX = -5.4;
 
   return (
-    <div className="w-full h-full relative bg-[#182232]">
+    <div className="w-full h-full relative bg-[#0c1425]">
       <Canvas 
         shadows 
-        gl={{ antialias: true, alpha: false }}
+        gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
         style={{ width: '100%', height: '100%' }}
       >
-        {/* Bright Background Color */}
-        <color attach="background" args={['#182232']} />
+        {/* Sleek Illuminated Industrial Slate Background */}
+        <color attach="background" args={['#0c1425']} />
+        {/* Extended Atmospheric Fog - keeps subterranean & distant models bright and visible */}
+        <fog attach="fog" args={['#0c1425', 40, 180]} />
 
-        {/* Perspective Camera */}
-        <PerspectiveCamera makeDefault position={[9, 6, 18]} fov={45} near={0.1} far={150} />
+        {/* Camera Setup */}
+        <PerspectiveCamera makeDefault position={[3.5, 4.0, 11.5]} fov={42} near={0.1} far={180} />
         <CameraPresetController activePreset={activeCameraPreset} controlsRef={controlsRef} />
 
-        {/* Free Orbit Controls */}
+        {/* Orbit Controls */}
         <OrbitControls 
           ref={controlsRef}
           makeDefault
@@ -109,71 +115,100 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
           zoomSpeed={1.0}
           panSpeed={0.8}
           maxPolarAngle={Math.PI * 0.95}
-          minDistance={2}
-          maxDistance={55}
+          minDistance={1.8}
+          maxDistance={60}
         />
 
-        {/* ULTRA-BRIGHT RELIABLE LIGHTING SETUP */}
-        {/* 1. Hemisphere Light for Sky/Ground Fill */}
-        <hemisphereLight skyColor="#ffffff" groundColor="#94a3b8" intensity={2.2} />
+        {/* HIGH-VISIBILITY MULTI-SOURCE LIGHTING SETUP */}
+        {/* Ambient & Hemisphere Fill */}
+        <hemisphereLight color="#ffffff" groundColor="#475569" intensity={2.2} />
+        <ambientLight intensity={2.5} color="#f8fafc" />
 
-        {/* 2. Global Ambient Light */}
-        <ambientLight intensity={2.2} color="#ffffff" />
-
-        {/* 3. Key Sun Directional Light with Shadows */}
+        {/* Key Surface Sunlight */}
         <directionalLight 
-          position={[22, 32, 18]} 
-          intensity={3.0} 
-          color="#ffffff"
+          position={[20, 30, 20]} 
+          intensity={3.2} 
+          color="#fffbeb"
           castShadow 
           shadow-mapSize-width={2048} 
           shadow-mapSize-height={2048}
           shadow-camera-near={0.5}
           shadow-camera-far={70}
-          shadow-camera-left={-20}
-          shadow-camera-right={20}
-          shadow-camera-top={20}
-          shadow-camera-bottom={-25}
           shadow-bias={-0.0001}
         />
 
-        {/* 4. Secondary Fill Sun (Opposing direction) */}
-        <directionalLight position={[-20, 25, -18]} intensity={2.0} color="#f1f5f9" />
+        {/* Surface Front-Left Fill Light */}
+        <directionalLight position={[-18, 18, 20]} intensity={2.2} color="#38bdf8" />
 
-        {/* 5. Surface Pumpjack Point Light */}
-        <pointLight position={[3, 10, 6]} intensity={3.5} color="#fffbeb" distance={25} />
+        {/* DEDICATED SUBSURFACE POINT LIGHTS (Illuminates Wellbore String & Reservoir) */}
+        <pointLight 
+          position={[-5.4, -4.0, 4.0]} 
+          intensity={4.5} 
+          color="#38bdf8" 
+          distance={28} 
+          decay={1}
+        />
+        <pointLight 
+          position={[-5.4, -13.5, 4.5]} 
+          intensity={6.0} 
+          color="#fbbf24" 
+          distance={28} 
+          decay={1}
+        />
+        <pointLight 
+          position={[2.0, 3.5, 5.0]} 
+          intensity={3.0} 
+          color="#f59e0b" 
+          distance={20} 
+        />
+        <directionalLight position={[0, -10, -8]} intensity={1.8} color="#a855f7" />
 
-        {/* 6. Subsurface Wellbore Floodlights */}
-        <pointLight position={[-5.4, 3.0, 5]} intensity={4.0} color="#ffffff" distance={25} />
-        <pointLight position={[-5.4, -6.5, 5]} intensity={4.5} color="#38bdf8" distance={25} />
-        <pointLight position={[-5.4, -14.0, 5]} intensity={5.0} color="#ff6600" distance={25} />
+        {/* GEOLOGICAL SUBSURFACE STRATA WALL BACKDROP (z = -1.2) */}
+        <group position={[-3.5, -7.5, -1.2]}>
+          {/* Layer 1: Overburden Caprock (-0.3m to -4.0m) */}
+          <mesh position={[0, 5.5, 0]}>
+            <planeGeometry args={[36, 4.5]} />
+            <meshStandardMaterial color="#1e293b" roughness={0.8} metalness={0.2} />
+          </mesh>
+          {/* Layer 2: Impermeable Shale Formation (-4.0m to -10.0m) */}
+          <mesh position={[0, 1.0, 0]}>
+            <planeGeometry args={[36, 5.5]} />
+            <meshStandardMaterial color="#0f172a" roughness={0.9} metalness={0.1} />
+          </mesh>
+          {/* Layer 3: Jodhpur Sandstone Heavy Oil Reservoir Bed (-10.0m to -16.0m) */}
+          <mesh position={[0, -4.5, 0]}>
+            <planeGeometry args={[36, 6.0]} />
+            <meshStandardMaterial color="#33241b" roughness={0.85} metalness={0.15} />
+          </mesh>
+          {/* Glowing Geological Stratigraphy Grid Lines */}
+          {[-2, -5, -8, -11, -14].map((yLevel) => (
+            <mesh key={yLevel} position={[0, yLevel + 7.5, 0.01]}>
+              <planeGeometry args={[36, 0.04]} />
+              <meshBasicMaterial color="#38bdf8" transparent opacity={0.35} />
+            </mesh>
+          ))}
+        </group>
 
-        {/* Ground & Subsurface Environment */}
+        {/* GROUND & SUBSURFACE ENVIRONMENT */}
         <group position={[0, 0, 0]}>
-          {/* Surface Ground Plane */}
-          <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-            <planeGeometry args={[80, 80]} />
-            <meshStandardMaterial color="#334155" roughness={0.6} metalness={0.1} />
+          {/* Concrete Base Pad under Pumpjack (Cutout around Wellhead at x=-5.4 so top of wellbore is fully visible) */}
+          <mesh position={[0.5, 0.01, 0]} receiveShadow>
+            <boxGeometry args={[14, 0.08, 8]} />
+            <meshStandardMaterial color="#334155" roughness={0.4} metalness={0.6} />
           </mesh>
 
-          {/* Bright Grid */}
-          <gridHelper args={[80, 80, '#64748b', '#475569']} position={[0, 0.01, 0]} />
+          {/* Grid Overlay */}
+          <gridHelper args={[70, 70, '#64748b', '#1e293b']} position={[0, 0.02, 0]} />
 
-          {/* Contact Shadows under Pumpjack */}
+          {/* Contact Shadows under Pumpjack & Storage Tank */}
           <ContactShadows 
-            position={[0, 0.02, 0]} 
-            opacity={0.5} 
-            scale={22} 
-            blur={1.2} 
-            far={10} 
+            position={[-3.5, 0.03, 0]} 
+            opacity={0.65} 
+            scale={24} 
+            blur={1.8} 
+            far={8} 
             color="#000000" 
           />
-
-          {/* Subsurface Geological Wall Backdrop */}
-          <mesh position={[-5.4, -8.0, -1.2]}>
-            <planeGeometry args={[18, 18]} />
-            <meshStandardMaterial color="#2d3748" roughness={0.7} metalness={0.1} />
-          </mesh>
         </group>
 
         {/* 3D SURFACE PUMPJACK MODEL */}
@@ -181,6 +216,14 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
           crankAngle={wellState.crankAngle}
           strokeLength={wellState.strokeLength}
           polishedRodPos={wellState.polishedRodPos}
+          onClickComponent={onSelectComponent}
+        />
+
+        {/* 3D SURFACE FLOWLINE PIPELINE & CRUDE OIL STORAGE TANK BATTERY */}
+        <SurfaceStorageTank 
+          wellheadX={wellheadX}
+          productionRate={wellState.productionRate}
+          fluidViscosityIndex={wellState.fluidViscosityIndex}
           onClickComponent={onSelectComponent}
         />
 
@@ -200,27 +243,32 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
           onClickComponent={onSelectComponent}
         />
 
-        {/* 3D DYNAMOMETER GHOST OVERLAY */}
-        <DynamometerGhostOverlay 
-          liveCard={wellState.liveDynoCard}
-          normalCard={wellState.normalDynoCard}
-          isAnomaly={wellState.anomalyDetected}
-        />
+        {/* CONDITIONALLY RENDER 3D SPATIAL OVERLAYS WHEN TAGS ARE TOGGLED ON */}
+        {showSpatialTags && (
+          <>
+            <DynamometerGhostOverlay 
+              liveCard={wellState.liveDynoCard}
+              normalCard={wellState.normalDynoCard}
+              isAnomaly={wellState.anomalyDetected}
+            />
 
-        {/* 3D SPATIAL ANNOTATIONS & LIVE CHANGING TELEMETRY HUD BADGES */}
-        <SpatialAnnotations 
-          phase={wellState.phase}
-          spm={wellState.spm}
-          strokeLength={wellState.strokeLength}
-          viscositycP={wellState.viscositycP}
-          reservoirTemp={wellState.reservoirTemp}
-          heatedZoneRadius={wellState.heatedZoneRadius}
-          productionRate={wellState.productionRate}
-          maxRodLoad={wellState.maxRodLoad}
-          sor={wellState.sor}
-          onSelectComponent={onSelectComponent}
-        />
+            <SpatialAnnotations 
+              phase={wellState.phase}
+              spm={wellState.spm}
+              strokeLength={wellState.strokeLength}
+              viscositycP={wellState.viscositycP}
+              reservoirTemp={wellState.reservoirTemp}
+              heatedZoneRadius={wellState.heatedZoneRadius}
+              productionRate={wellState.productionRate}
+              maxRodLoad={wellState.maxRodLoad}
+              sor={wellState.sor}
+              onSelectComponent={onSelectComponent}
+            />
+          </>
+        )}
       </Canvas>
     </div>
   );
 };
+
+export default DigitalTwinScene;

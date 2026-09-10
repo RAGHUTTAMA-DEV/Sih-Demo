@@ -1,9 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { WellState, CameraPreset, AnomalyEvent, CyclePhase } from './types/simulation';
-import { getInitialState, stepSimulation, PHASE_DURATIONS } from './services/simulationEngine';
+import { WellState, CameraPreset, AnomalyEvent, ViewMode } from './types/simulation';
+import { getInitialState, stepSimulation } from './services/simulationEngine';
 import { HeaderBar } from './components/ui/HeaderBar';
+import { TopMetricsRow } from './components/ui/TopMetricsRow';
 import { DigitalTwinScene } from './components/3d/DigitalTwinScene';
-import { TelemetryPanel } from './components/ui/TelemetryPanel';
+import { ViewModeToolbar } from './components/ui/ViewModeToolbar';
+import { LiveDataOverlay } from './components/ui/LiveDataOverlay';
+import { TimelineScrubber } from './components/ui/TimelineScrubber';
+import { AIDigitalTwinInsights } from './components/ui/AIDigitalTwinInsights';
+import { CSSOptimizationCard } from './components/ui/CSSOptimizationCard';
+import { SRPOptimizationCard } from './components/ui/SRPOptimizationCard';
+import { RodFailurePredictionCard } from './components/ui/RodFailurePredictionCard';
+import { AnalyticsChartsGrid } from './components/ui/AnalyticsChartsGrid';
+import { WhatIfModal } from './components/ui/WhatIfModal';
 import { LegendModal } from './components/ui/LegendModal';
 import { ComponentDetailModal } from './components/ui/ComponentDetailModal';
 
@@ -15,11 +24,15 @@ export const App: React.FC = () => {
       timestamp: new Date().toLocaleTimeString(),
       phase: 'PRODUCTION',
       severity: 'info',
-      message: 'SCADA Digital Twin connected to Well BW-04 physics telemetry stream.'
+      message: 'SCADA Digital Twin connected to Well BGW-07 telemetry stream.'
     }
   ]);
   const [activeCameraPreset, setActiveCameraPreset] = useState<CameraPreset>('overview');
   const [isLegendOpen, setIsLegendOpen] = useState<boolean>(false);
+  const [isWhatIfOpen, setIsWhatIfOpen] = useState<boolean>(false);
+  const [isRightPanelOpen, setIsRightPanelOpen] = useState<boolean>(true);
+  const [isAnalyticsDrawerOpen, setIsAnalyticsDrawerOpen] = useState<boolean>(false);
+  const [showSpatialTags, setShowSpatialTags] = useState<boolean>(false); // Default OFF for clean 3D view
   const [selectedComponentName, setSelectedComponentName] = useState<string | null>(null);
 
   // Physics animation loop reference
@@ -49,66 +62,28 @@ export const App: React.FC = () => {
     return () => cancelAnimationFrame(animId);
   }, []);
 
-  // Handlers for user interaction
+  const handleChangeViewMode = (mode: ViewMode) => {
+    setWellState((prev) => ({ ...prev, viewMode: mode }));
+  };
+
   const handleTogglePause = () => {
     setWellState((prev) => ({ ...prev, isPaused: !prev.isPaused }));
   };
 
-  const handleChangeSpeed = (multiplier: 1 | 5 | 20) => {
-    setWellState((prev) => ({ ...prev, speedMultiplier: multiplier }));
-  };
-
-  const handleStepPhase = () => {
-    const phases: CyclePhase[] = ['INJECTION', 'SOAK', 'PRODUCTION'];
-    const nextIdx = (phases.indexOf(wellState.phase) + 1) % phases.length;
-    const nextPhase = phases[nextIdx];
-
-    setWellState((prev) => ({
-      ...prev,
-      phase: nextPhase,
-      phaseTime: 0,
-      phaseDuration: PHASE_DURATIONS[nextPhase]
-    }));
-
-    setEvents((prev) => [
-      ...prev,
-      {
-        id: `manual-step-${Date.now()}`,
-        timestamp: new Date().toLocaleTimeString(),
-        phase: nextPhase,
-        severity: 'info',
-        message: `MANUAL OVERRIDE: User stepped simulation to ${nextPhase} phase.`
-      }
-    ]);
-  };
-
-  const handleSetTargetSpm = (spm: number) => {
-    setWellState((prev) => ({
-      ...prev,
-      targetSpm: spm,
-      spm: spm,
-      aiRecommendationApplied: false
-    }));
-  };
-
-  const handleSetTargetStroke = (stroke: number) => {
-    setWellState((prev) => ({
-      ...prev,
-      targetStrokeLength: stroke,
-      strokeLength: stroke,
-      aiRecommendationApplied: false
-    }));
+  const handleTimelineChange = (day: number) => {
+    setWellState((prev) => ({ ...prev, timelineDay: day }));
   };
 
   const handleApplyAIRecommendation = () => {
-    // Apply recommended SPM 5.5 and Stroke Length 2.4m
     setWellState((prev) => ({
       ...prev,
-      targetSpm: 5.5,
-      targetStrokeLength: 2.4,
+      spm: 4.7,
+      targetSpm: 4.7,
       aiRecommendationApplied: true,
       anomalyDetected: false,
-      anomalyMessage: null
+      anomalyMessage: null,
+      pumpFillagePercent: 86,
+      rodFailureRiskPercent: 3
     }));
 
     setEvents((prev) => [
@@ -118,72 +93,136 @@ export const App: React.FC = () => {
         timestamp: new Date().toLocaleTimeString(),
         phase: wellState.phase,
         severity: 'info',
-        message: 'AI PRESCRIPTIVE ACTION EXECUTED: Reduced SPM to 5.5 and stroke to 2.4m. Rod floating & impact loading eliminated.'
+        message: 'AI PRESCRIPTIVE ACTION EXECUTED: Reduced SPM to 4.7. Kinematics & fluid fall rate normalized.'
       }
     ]);
   };
 
+  const handleApplyWhatIfParams = (spm: number, steamVol: number, soakHours: number) => {
+    setWellState((prev) => ({
+      ...prev,
+      spm: spm,
+      targetSpm: spm,
+      sor: parseFloat((4.8 * (steamVol / 120)).toFixed(1)),
+      aiRecommendationApplied: true
+    }));
+  };
+
   return (
-    <div className="w-screen h-screen flex flex-col bg-[#090d12] text-slate-100 overflow-hidden font-sans select-none">
-      {/* TOP SCADA NAVIGATION BAR */}
-      <HeaderBar 
+    <div className="w-screen h-screen flex flex-col bg-[#f4f7fa] text-slate-900 overflow-hidden font-sans select-none">
+      {/* 1. SINGLE UNIFIED TOP SCADA HEADER BAR */}
+      <HeaderBar
         wellState={wellState}
         activeCameraPreset={activeCameraPreset}
+        showSpatialTags={showSpatialTags}
+        isRightPanelOpen={isRightPanelOpen}
+        isAnalyticsDrawerOpen={isAnalyticsDrawerOpen}
         onSelectCameraPreset={setActiveCameraPreset}
+        onToggleSpatialTags={() => setShowSpatialTags(!showSpatialTags)}
+        onToggleRightPanel={() => setIsRightPanelOpen(!isRightPanelOpen)}
+        onToggleAnalyticsDrawer={() => setIsAnalyticsDrawerOpen(!isAnalyticsDrawerOpen)}
         onOpenLegend={() => setIsLegendOpen(true)}
       />
 
-      {/* SPLIT SCREEN MAIN VIEWPORT */}
-      <div className="flex-1 flex overflow-hidden relative">
-        {/* LEFT ~65%: 3D DIGITAL TWIN SCENE */}
-        <div className="w-full lg:w-[65%] h-full relative">
-          <DigitalTwinScene 
-            wellState={wellState}
-            activeCameraPreset={activeCameraPreset}
-            onSelectComponent={(name) => setSelectedComponentName(name)}
-          />
+      {/* 2. TOP 8 KPI METRIC CARDS ROW */}
+      <TopMetricsRow wellState={wellState} />
 
-          {/* BOTTOM-LEFT SCADA IN-APP LEGEND CAPTION OVERLAY */}
-          <div className="absolute bottom-4 left-4 z-10 p-2.5 rounded-lg bg-slate-950/85 border border-slate-800 backdrop-blur-md max-w-sm text-[11px] font-mono shadow-2xl pointer-events-auto">
-            <div className="text-amber-400 font-bold mb-1 flex items-center justify-between">
-              <span>💡 QUICK 3D LEGEND</span>
-              <button 
-                onClick={() => setIsLegendOpen(true)} 
-                className="text-[9px] text-cyan-400 underline hover:text-cyan-300"
-              >
-                Full Guide
-              </button>
+      {/* 3. MAIN WORKSPACE AREA */}
+      <div className="flex-1 flex min-h-0 overflow-hidden relative">
+        {/* CENTER SECTION: 3D DIGITAL TWIN VIEWPORT */}
+        <div className="flex-1 flex flex-col h-full min-w-0 relative">
+          {/* 3D CANVAS CONTAINER (Expands to fill 100% available height) */}
+          <div className="flex-1 w-full relative bg-[#090d16] overflow-hidden">
+            {/* TOP-LEFT VIEW MODE PILLS */}
+            <div className="absolute top-4 left-4 z-10">
+              <ViewModeToolbar
+                viewMode={wellState.viewMode}
+                onChangeViewMode={handleChangeViewMode}
+              />
             </div>
-            <div className="space-y-1 text-slate-300 text-[10px]">
-              <div>• <strong>Reservoir Sphere Size</strong> = Heated Zone Radius ({wellState.heatedZoneRadius}m)</div>
-              <div>• <strong>Fluid Color</strong> = Viscosity ({wellState.viscositycP} cP, Orange=Hot, Dark=Cold)</div>
-              <div>• <strong>Dynamometer Gap</strong> = Anomaly Severity (Rod Float Lag)</div>
+
+            {/* OVERLAID LIVE DATA READOUT COLUMN (RIGHT EDGE) */}
+            <LiveDataOverlay wellState={wellState} />
+
+            {/* THREE.JS 3D SCENE */}
+            <DigitalTwinScene
+              wellState={wellState}
+              activeCameraPreset={activeCameraPreset}
+              showSpatialTags={showSpatialTags}
+              onSelectComponent={(name) => setSelectedComponentName(name)}
+            />
+
+            {/* BOTTOM-LEFT 3D LEGEND OVERLAY */}
+            <div className="absolute bottom-4 left-4 z-10 p-3 rounded-xl bg-slate-950/85 border border-slate-800 backdrop-blur-md max-w-xs text-xs font-mono text-slate-200 shadow-2xl pointer-events-auto">
+              <div className="text-amber-400 font-bold mb-1 flex items-center justify-between">
+                <span>💡 3D TWIN LEGEND</span>
+                <button
+                  onClick={() => setIsLegendOpen(true)}
+                  className="text-[10px] text-cyan-400 underline hover:text-cyan-300"
+                >
+                  Full Guide
+                </button>
+              </div>
+              <div className="space-y-0.5 text-[11px] text-slate-300">
+                <div>• <strong>Heated Zone Radius</strong> = {wellState.heatedZoneRadius}m</div>
+                <div>• <strong>Fluid Viscosity</strong> = {wellState.viscositycP.toLocaleString()} cP</div>
+                <div>• <strong>Stroke Rate</strong> = {wellState.spm.toFixed(1)} SPM</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* RIGHT ~35%: LIVE TELEMETRY & CONTROL DASHBOARD */}
-        <div className="hidden lg:block lg:w-[35%] h-full">
-          <TelemetryPanel 
+          {/* ANALYTICAL CHARTS DRAWER (COLLAPSIBLE) */}
+          {isAnalyticsDrawerOpen && (
+            <div className="border-t border-slate-200 bg-white max-h-[220px] overflow-y-auto animate-in slide-in-from-bottom duration-200">
+              <AnalyticsChartsGrid wellState={wellState} />
+            </div>
+          )}
+
+          {/* TIMELINE SCRUBBER & WHAT-IF SIMULATION BAR */}
+          <TimelineScrubber
             wellState={wellState}
-            events={events}
+            onTimelineChange={handleTimelineChange}
             onTogglePause={handleTogglePause}
-            onChangeSpeed={handleChangeSpeed}
-            onStepPhase={handleStepPhase}
-            onSetTargetSpm={handleSetTargetSpm}
-            onSetTargetStroke={handleSetTargetStroke}
-            onApplyAIRecommendation={handleApplyAIRecommendation}
+            onOpenWhatIf={() => setIsWhatIfOpen(true)}
           />
         </div>
+
+        {/* RIGHT SIDEBAR: INSIGHTS & OPTIMIZATION DASHBOARD PANEL */}
+        {isRightPanelOpen && (
+          <div className="w-80 lg:w-[360px] xl:w-[390px] h-full bg-white border-l border-slate-200 p-4 overflow-y-auto flex-shrink-0 animate-in slide-in-from-right duration-200">
+            {/* AI DIGITAL TWIN INSIGHTS */}
+            <AIDigitalTwinInsights
+              wellState={wellState}
+              onApplyRecommendation={handleApplyAIRecommendation}
+              onOpenWhatIf={() => setIsWhatIfOpen(true)}
+            />
+
+            {/* CSS OPTIMIZATION CARD */}
+            <CSSOptimizationCard wellState={wellState} />
+
+            {/* SRP OPTIMIZATION CARD */}
+            <SRPOptimizationCard wellState={wellState} />
+
+            {/* ROD FAILURE PREDICTION CARD */}
+            <RodFailurePredictionCard wellState={wellState} />
+          </div>
+        )}
       </div>
 
       {/* MODALS */}
-      <LegendModal 
-        isOpen={isLegendOpen} 
-        onClose={() => setIsLegendOpen(false)} 
+      <WhatIfModal
+        isOpen={isWhatIfOpen}
+        wellState={wellState}
+        onClose={() => setIsWhatIfOpen(false)}
+        onApplyParams={handleApplyWhatIfParams}
       />
 
-      <ComponentDetailModal 
+      <LegendModal
+        isOpen={isLegendOpen}
+        onClose={() => setIsLegendOpen(false)}
+      />
+
+      <ComponentDetailModal
         componentName={selectedComponentName}
         wellState={wellState}
         onClose={() => setSelectedComponentName(null)}

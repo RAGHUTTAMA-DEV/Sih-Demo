@@ -267,12 +267,7 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({
       </div>
 
       {/* 4. DYNAMOMETER CARD CHART */}
-      <DynamometerCard2D 
-        liveCard={wellState.liveDynoCard}
-        normalCard={wellState.normalDynoCard}
-        isAnomaly={wellState.anomalyDetected}
-        strokeLength={wellState.strokeLength}
-      />
+      <DynamometerCard2D wellState={wellState} />
 
       {/* 5. AI RECOMMENDATION CARD */}
       <AIRecommendationCard 
